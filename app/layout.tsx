@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import '@fontsource-variable/public-sans';
 import './globals.css';
+import './workflows.css';
 
 export const metadata: Metadata = {
   title: 'Company OS | Central Admin',

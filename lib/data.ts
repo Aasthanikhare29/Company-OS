@@ -5,7 +5,7 @@ export type Approval = {
   department: string; type: string; status: 'pending' | 'approved' | 'declined'; detail: string; date: string;
 };
 export type Activity = { id: string; title: string; description: string; time: string; module: ModuleId; color: string; initials: string };
-export type Task = { id: string; title: string; department: string; priority: string; due: string };
+export type Task = { id: string; title: string; department: string; priority: string; due: string; status?: 'To do' | 'In progress' | 'Done'; project?: string };
 export type Preferences = { name: string; timezone: string; weekStart: string; approvalNotifications: boolean; dailyDigest: boolean };
 export type SearchRecord = { id: string; title: string; description: string; module: ModuleId };
 

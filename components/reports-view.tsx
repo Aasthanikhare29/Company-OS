@@ -1,0 +1,21 @@
+'use client';
+
+import { useState } from 'react';
+import { ArrowDownToLine, ArrowUpRight, ChevronRight, FileText } from 'lucide-react';
+import { moduleNames, type Period } from '@/lib/data';
+import { departmentIds, departmentConfig, downloadCsv, recordSubtitle, recordValue, summarizeOperations, type OperationRecord, type DepartmentId } from '@/lib/operations';
+import { formatNumber, getPeriodData } from '@/lib/workspace';
+import { Performance } from './overview';
+import { Status } from './ui';
+
+export function ReportsView({ records, period, onOpenRecord }: { records: OperationRecord[]; period: Period; onOpenRecord: (record: OperationRecord) => void }) {
+  const [selected, setSelected] = useState<DepartmentId | 'historical'>('sales');
+  const summary = summarizeOperations(records);
+  const data = getPeriodData(period);
+  const rows = records.filter(r => r.module === selected);
+  function exportReport() {
+    if (selected === 'historical') downloadCsv(`company-os-historical-${period}`, [['Synthetic historical reporting',data.label],['Date','Revenue','Expenses'],...data.points.map(point => [point.label,point.revenue,point.expenses])]);
+    else downloadCsv(`company-os-${selected}-report`, [['Current browser-local records'],['Record','Status','Value','Owner'],...rows.map(record => [record.title,record.status,recordValue(record),record.fields.owner])]);
+  }
+  return <div className="reports-workspace"><div className="module-stats"><div><span>Open pipeline</span><strong>{formatNumber(summary.pipeline)}</strong><small>Current opportunities</small></div><div><span>Outstanding invoices</span><strong>{formatNumber(summary.receivable)}</strong><small>Sent and overdue</small></div><div><span>Active projects</span><strong>{summary.activeProjects}</strong><small>Current workspace</small></div><div><span>Open support tickets</span><strong>{summary.openTickets}</strong><small>Awaiting resolution</small></div></div><div className="report-layout"><aside className="panel report-navigation"><h2>Report library</h2>{departmentIds.map(module => <button className={selected === module ? 'active' : ''} key={module} onClick={() => setSelected(module)}><FileText size={16} /><span>{moduleNames[module]}</span><ChevronRight size={14} /></button>)}<div className="nav-divider" /><button className={selected === 'historical' ? 'active' : ''} onClick={() => setSelected('historical')}><FileText size={16} /><span>Historical sample</span><ChevronRight size={14} /></button><p>Current reports reflect your browser-local edits. Historical charts are a separate synthetic sample.</p></aside><section className="panel report-result"><div className="operations-heading"><div><span className="operations-symbol blue"><FileText size={21} /></span><div><h2>{selected === 'historical' ? 'Historical performance sample' : `${moduleNames[selected]} report`}</h2><p>{selected === 'historical' ? data.label : `${rows.length} current records · Saved on this browser`}</p></div></div><button className="secondary-button" onClick={exportReport}><ArrowDownToLine size={15} />Export CSV</button></div>{selected === 'historical' ? <div className="historical-report"><p className="report-data-note">Illustrative revenue history. These numbers are not calculated from the editable invoice records.</p><Performance period={period} onExport={exportReport} /></div> : <><div className="report-summary-line"><span>Current operational snapshot</span><span>Currency-neutral amounts</span></div><div className="table-scroll"><table className="records-table"><thead><tr><th>{departmentConfig[selected].titleLabel}</th><th>Value</th><th>Status</th><th>Owner</th><th><span className="sr-only">Open record</span></th></tr></thead><tbody>{rows.map(record => <tr key={record.id}><td><button className="record-name" onClick={() => onOpenRecord(record)}><span><strong>{record.title}</strong><small>{recordSubtitle(record)}</small></span></button></td><td>{recordValue(record)}</td><td><Status value={record.status} /></td><td>{record.fields.owner}</td><td><button className="icon-button" aria-label={`Open ${record.title}`} onClick={() => onOpenRecord(record)}><ArrowUpRight size={16} /></button></td></tr>)}</tbody></table></div><div className="operations-footer"><span>{rows.length} records in this report</span><span>Demo data</span></div></>}</section></div></div>;
+}
